@@ -22,31 +22,38 @@
                     <div>
                         <div class="d-flex gap-2">
                             <!-- Unified Dropdown for Export/Print options -->
-                            @if(auth()->user()->can('coursecandidate-export-excel') || auth()->user()->can('coursecandidate-export-pdf'))
+                            @if (auth()->user()->can('coursecandidate-export-excel') || auth()->user()->can('coursecandidate-export-pdf'))
                                 <div class="btn-group" role="group">
-                                    <button type="button" class="btn btn-primary dropdown-toggle" data-bs-toggle="dropdown" aria-expanded="false">
+                                    <button type="button" class="btn btn-primary dropdown-toggle" data-bs-toggle="dropdown"
+                                        aria-expanded="false">
                                         <i class="mdi mdi-download me-1"></i>
                                         تصدير / طباعة
                                     </button>
                                     <ul class="dropdown-menu">
                                         @can('coursecandidate-export-excel')
                                             <li>
-                                                <a class="dropdown-item" href="#" wire:click="exportSelected" {{ $selectedRows && count($selectedRows) > 0 ? '' : 'onclick="return false;"' }} style="{{ $selectedRows && count($selectedRows) > 0 ? '' : 'opacity: 0.5; cursor: not-allowed;' }}">
+                                                <a class="dropdown-item" href="#" wire:click="exportSelected"
+                                                    {{ $selectedRows && count($selectedRows) > 0 ? '' : 'onclick="return false;"' }}
+                                                    style="{{ $selectedRows && count($selectedRows) > 0 ? '' : 'opacity: 0.5; cursor: not-allowed;' }}">
                                                     <i class="mdi mdi-file-excel me-2 text-success"></i>
                                                     تصدير Excel
                                                 </a>
                                             </li>
-                                            <li><hr class="dropdown-divider"></li>
+                                            <li>
+                                                <hr class="dropdown-divider">
+                                            </li>
                                         @endcan
                                         @can('coursecandidate-export-pdf')
                                             <li>
-                                                <a class="dropdown-item" href="{{ route('CourseCandidates.export.pdf.tcpdf') }}">
+                                                <a class="dropdown-item"
+                                                    href="{{ route('CourseCandidates.export.pdf.tcpdf') }}">
                                                     <i class="mdi mdi-file-pdf-box me-2 text-danger"></i>
                                                     تصدير PDF (TCPDF)
                                                 </a>
                                             </li>
                                             <li>
-                                                <a class="dropdown-item" href="{{ route('CourseCandidates.print.view') }}" target="_blank">
+                                                <a class="dropdown-item" href="{{ route('CourseCandidates.print.view') }}"
+                                                    target="_blank">
                                                     <i class="mdi mdi-printer me-2 text-info"></i>
                                                     طباعة مباشرة
                                                 </a>
@@ -85,47 +92,45 @@
                                 <th></th>
                                 <th></th>
                                 <th class="text-center">
-                                        <select wire:model.debounce.300ms="search.employee_id"
-                                            class="form-select text-center"
-                                            wire:key="search_employee_id">
-                                            <option value="">جميع الخيارات</option>
-                                            @if(class_exists('App\Models\Employees\Employees'))
-                                            @foreach(App\Models\Employees\Employees::all() as $item)
+                                    <select wire:model.debounce.300ms="search.employee_id" class="form-select text-center"
+                                        wire:key="search_employee_id">
+                                        <option value="">جميع الخيارات</option>
+                                        @if (class_exists('App\Models\Employees\Employees'))
+                                            @foreach (App\Models\Employees\Employees::all() as $item)
                                                 <option value="{{ $item->id }}">{{ $item->employee_name }}</option>
                                             @endforeach
                                         @elseif(class_exists('App\Models\Employee\Employee'))
-                                            @foreach(App\Models\Employee\Employee::all() as $item)
+                                            @foreach (App\Models\Employee\Employee::all() as $item)
                                                 <option value="{{ $item->id }}">{{ $item->employee_name }}</option>
                                             @endforeach
                                         @endif
-                                        </select>
-                                    </th>
+                                    </select>
+                                </th>
                                 <th class="text-center">
-                                        <select wire:model.debounce.300ms="search.course_id"
-                                            class="form-select text-center"
-                                            wire:key="search_course_id">
-                                            <option value="">جميع الخيارات</option>
-                                            @if(class_exists('App\Models\Courses\Courses'))
-                                            @foreach(App\Models\Courses\Courses::all() as $item)
+                                    <select wire:model.debounce.300ms="search.course_id" class="form-select text-center"
+                                        wire:key="search_course_id">
+                                        <option value="">جميع الخيارات</option>
+                                        @if (class_exists('App\Models\Courses\Courses'))
+                                            @foreach (App\Models\Courses\Courses::all() as $item)
                                                 <option value="{{ $item->id }}">{{ $item->course_title }}</option>
                                             @endforeach
                                         @elseif(class_exists('App\Models\Course\Course'))
-                                            @foreach(App\Models\Course\Course::all() as $item)
+                                            @foreach (App\Models\Course\Course::all() as $item)
                                                 <option value="{{ $item->id }}">{{ $item->course_title }}</option>
                                             @endforeach
                                         @endif
-                                        </select>
-                                    </th>
+                                    </select>
+                                </th>
                                 <th class="text-center">
-                                        <input type="text" wire:model.debounce.300ms="search.nomination_book_no"
-                                            class="form-control text-center" placeholder="رقم كتاب الترشيح"
-                                            wire:key="search_nomination_book_no">
-                                    </th>
+                                    <input type="text" wire:model.debounce.300ms="search.nomination_book_no"
+                                        class="form-control text-center" placeholder="رقم كتاب الترشيح"
+                                        wire:key="search_nomination_book_no">
+                                </th>
                                 <th class="text-center">
-                                        <input wire:ignore type="text" wire:model.debounce.300ms="search.nomination_book_date"
-                                            class="form-control text-center flatpickr-input flatpickr-date" placeholder="تاريخ كتاب الترشيح"
-                                            wire:key="search_nomination_book_date">
-                                    </th>
+                                    <input wire:ignore type="text" wire:model.debounce.300ms="search.nomination_book_date"
+                                        class="form-control text-center flatpickr-input flatpickr-date"
+                                        placeholder="تاريخ كتاب الترشيح" wire:key="search_nomination_book_date">
+                                </th>
                                 <th></th>
                             </tr>
                         </thead>
@@ -143,8 +148,8 @@
                                     </td>
                                     <td>{{ $i++ }}</td>
                                     <td class="text-center">
-                                        @if($CourseCandidate->employee_id)
-                                            @if(class_exists('App\Models\Employees\Employees'))
+                                        @if ($CourseCandidate->employee_id)
+                                            @if (class_exists('App\Models\Employees\Employees'))
                                                 {{ App\Models\Employees\Employees::find($CourseCandidate->employee_id)?->employee_name ?? 'غير محدد' }}
                                             @elseif(class_exists('App\Models\Employee\Employee'))
                                                 {{ App\Models\Employee\Employee::find($CourseCandidate->employee_id)?->employee_name ?? 'غير محدد' }}
@@ -156,8 +161,8 @@
                                         @endif
                                     </td>
                                     <td class="text-center">
-                                        @if($CourseCandidate->course_id)
-                                            @if(class_exists('App\Models\Courses\Courses'))
+                                        @if ($CourseCandidate->course_id)
+                                            @if (class_exists('App\Models\Courses\Courses'))
                                                 {{ App\Models\Courses\Courses::find($CourseCandidate->course_id)?->course_title ?? 'غير محدد' }}
                                             @elseif(class_exists('App\Models\Course\Course'))
                                                 {{ App\Models\Course\Course::find($CourseCandidate->course_id)?->course_title ?? 'غير محدد' }}
@@ -168,12 +173,14 @@
                                             غير محدد
                                         @endif
                                     </td>
-                                    <td class="text-center">{{$CourseCandidate->nomination_book_no}}</td>
-                                    <td class="text-center">{{$CourseCandidate->nomination_book_date ? \Carbon\Carbon::parse($CourseCandidate->nomination_book_date)->format('Y/m/d') : '-'}}</td>
+                                    <td class="text-center">{{ $CourseCandidate->nomination_book_no }}</td>
+                                    <td class="text-center">
+                                        {{ $CourseCandidate->nomination_book_date ? \Carbon\Carbon::parse($CourseCandidate->nomination_book_date)->format('Y/m/d') : '-' }}
+                                    </td>
                                     <td class="text-center">
                                         <div class="btn-group" role="group" aria-label="First group">
                                             @can('coursecandidate-edit')
-                                                <button wire:click="GetCourseCandidate({{$CourseCandidate->id}})"
+                                                <button wire:click="GetCourseCandidate({{ $CourseCandidate->id }})"
                                                     class="p-0 px-1 btn btn-text-primary waves-effect" data-bs-toggle="modal"
                                                     data-bs-target="#editcoursecandidateModal">
                                                     <i class="mdi mdi-text-box-edit-outline fs-3"></i>
@@ -181,9 +188,9 @@
                                             @endcan
                                             @can('coursecandidate-delete')
                                                 <strong style="margin: 0 10px;">|</strong>
-                                                <button wire:click="GetCourseCandidate({{$CourseCandidate->id}})"
-                                                    class="p-0 px-1 btn btn-text-danger waves-effect"
-                                                    data-bs-toggle = "modal" data-bs-target="#removecoursecandidateModal">
+                                                <button wire:click="GetCourseCandidate({{ $CourseCandidate->id }})"
+                                                    class="p-0 px-1 btn btn-text-danger waves-effect" data-bs-toggle = "modal"
+                                                    data-bs-target="#removecoursecandidateModal">
                                                     <i class="tf-icons mdi mdi-delete-outline fs-3"></i>
                                                 </button>
                                             @endcan
