@@ -1,0 +1,29 @@
+<!DOCTYPE html>
+<html>
+    <head>
+    <title>Hello World</title>
+    <script type="text/javascript" src="Resources/dynamsoft.webtwain.initiate.js"></script>
+    <script type="text/javascript" src="Resources/dynamsoft.webtwain.config.js"></script>
+</head>
+<body>
+    <div id="dwtcontrolContainer" ></div>
+    <input type="button" value="Acquire" onclick="AcquireImage();" />
+    <script type="text/javascript">
+	var DWTObject;
+	Dynamsoft.DWT.RegisterEvent("OnWebTwainReady", function () {
+		DWTObject = Dynamsoft.DWT.GetWebTwain('dwtcontrolContainer');
+	});
+	function AcquireImage() {
+	    if (DWTObject) {		
+	        DWTObject.SelectSourceAsync().then(function () {
+	            return DWTObject.AcquireImageAsync({
+	                IfCloseSourceAfterAcquire: true 
+	            });
+	        }).catch(function (exp) {
+	            alert(exp.message);
+	        });
+	    }
+	}
+    </script>
+</body>
+</html>
