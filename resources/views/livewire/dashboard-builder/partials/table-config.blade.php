@@ -19,7 +19,16 @@
                         <select class="form-select" wire:model="tableOrderBy">
                             <option value="">-- الترتيب الافتراضي --</option>
                             @foreach($availableColumns as $column)
-                                <option value="{{ $column['name'] }}">{{ $column['label'] }}</option>
+                                <option value="{{ $column['name'] }}">
+                                    {{ $column['label'] }}
+                                    @if($column['has_relation'])
+                                        @if(isset($column['relation']['type']) && $column['relation']['type'] === 'select_source')
+                                            (قائمة منسدلة)
+                                        @elseif(isset($column['relation']['table_arabic']))
+                                            ({{ $column['relation']['table_arabic'] }})
+                                        @endif
+                                    @endif
+                                </option>
                             @endforeach
                         </select>
                     </div>
@@ -210,8 +219,22 @@
                                                value="{{ $column['name'] }}"
                                                id="table_col_{{ $column['name'] }}">
                                         <label class="form-check-label" for="table_col_{{ $column['name'] }}">
-                                            <strong>{{ $column['label'] }}</strong>
-                                            <small class="d-block text-muted">{{ $column['name'] }} ({{ $column['type'] }})</small>
+                                            <div class="d-flex flex-column">
+                                                <div class="d-flex align-items-center gap-2">
+                                                    <strong class="text-primary">{{ $column['label'] }}</strong>
+                                                    @if($column['has_relation'])
+                                                        <span class="badge bg-info rounded-pill small">
+                                                            <i class="mdi mdi-link-variant me-1"></i>
+                                                            @if(isset($column['relation']['type']) && $column['relation']['type'] === 'select_source')
+                                                                قائمة منسدلة
+                                                            @elseif(isset($column['relation']['table_arabic']))
+                                                                {{ $column['relation']['table_arabic'] }}
+                                                            @endif
+                                                        </span>
+                                                    @endif
+                                                </div>
+                                                <small class="text-muted">{{ $column['name'] }}</small>
+                                            </div>
                                         </label>
                                     </div>
                                 </div>
@@ -255,14 +278,37 @@
                                         @php
                                             $column = collect($availableColumns)->firstWhere('name', $columnName);
                                         @endphp
-                                        <th>{{ $column['label'] ?? $columnName }}</th>
+                                        <th>
+                                            {{ $column['label'] ?? $columnName }}
+                                            @if($column['has_relation'])
+                                                <i class="mdi mdi-link-variant text-info" title="حقل مرتبط"></i>
+                                            @endif
+                                        </th>
                                     @endforeach
                                 </tr>
                             </thead>
                             <tbody>
                                 <tr>
                                     @foreach($tableColumns as $columnName)
-                                        <td class="text-muted">{{ $columnName }}</td>
+                                        @php
+                                            $column = collect($availableColumns)->firstWhere('name', $columnName);
+                                        @endphp
+                                        <td class="text-muted">
+                                            <span>{{ $columnName }}</span>
+                                            @if($column['has_relation'])
+                                                <br>
+                                                <small class="text-info">
+                                                    <i class="mdi mdi-arrow-right-bold"></i>
+                                                    @if(isset($column['relation']['type']) && $column['relation']['type'] === 'select_source')
+                                                        {{ $column['relation']['source'] ?? '' }}
+                                                    @elseif(isset($column['relation']['table']))
+                                                        {{ $column['relation']['table'] }}.{{ $column['relation']['display'] ?? 'name' }}
+                                                    @else
+                                                        علاقة
+                                                    @endif
+                                                </small>
+                                            @endif
+                                        </td>
                                     @endforeach
                                 </tr>
                             </tbody>

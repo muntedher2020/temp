@@ -197,6 +197,13 @@ class DashboardBuilderMain extends Component
             $this->availableColumns = [];
             $this->numericColumns = [];
 
+            // جلب معلومات الحقول من module_fields
+            $moduleFields = ModuleField::where('table_name', $this->selectedModule)->get();
+
+            // جلب معلومات الحقول من جدول module_fields
+            $moduleFields = ModuleField::where('table_name', $this->selectedModule)
+                ->get();
+
             // جلب معلومات الأعمدة مع التعليقات (Comments)
             $tableInfo = DB::select("
                 SELECT COLUMN_NAME, DATA_TYPE, COLUMN_COMMENT
@@ -207,21 +214,53 @@ class DashboardBuilderMain extends Component
             $columnsInfo = collect($tableInfo)->keyBy('COLUMN_NAME');
 
             foreach ($columns as $column) {
-                if (!in_array($column, ['id', 'created_at', 'updated_at', 'deleted_at'])) {
+                if (!in_array($column, ['created_at', 'updated_at', 'deleted_at'])) {
+                    // البحث عن معلومات الحقل في module_fields
+                    $moduleField = $moduleFields->where('field_name', $column)->first();
                     $columnType = Schema::getColumnType($this->selectedModule, $column);
-                    $columnInfo = $columnsInfo->get($column);
 
-                    // استخدام التعليق العربي إذا كان متوفراً، وإلا استخدام الاسم المنسق
-                    $arabicLabel = $columnInfo && $columnInfo->COLUMN_COMMENT ?
-                        $columnInfo->COLUMN_COMMENT :
-                        ucwords(str_replace('_', ' ', $column));
-
-                    $this->availableColumns[] = [
+                    // تحضير البيانات الأساسية للعمود
+                    $columnData = [
                         'name' => $column,
-                        'label' => $arabicLabel,
+                        'label' => $moduleField ? $moduleField->arabic_name : $column,
                         'type' => $columnType,
-                        'comment' => $columnInfo ? $columnInfo->COLUMN_COMMENT : null
+                        'has_relation' => false
                     ];
+
+                    // إذا كان الحقل موجود في module_fields
+                    if ($moduleField) {
+                        // إذا كان هناك جدول مرتبط
+                        if ($moduleField->related_table) {
+                            $columnData['has_relation'] = true;
+                            $columnData['relation'] = [
+                                'type' => 'table',
+                                'table' => $moduleField->related_table,
+                                'field' => $moduleField->related_field ?: 'id',
+                                'display' => $moduleField->related_display ?: 'name'
+                            ];
+                            $columnData['label'] = $moduleField->arabic_name ?: $column;
+                        }
+                        // إذا كان هناك مصدر للقائمة المنسدلة
+                        elseif ($moduleField->select_source) {
+                            $columnData['has_relation'] = true;
+                            $columnData['relation'] = [
+                                'type' => 'select',
+                                'source' => $moduleField->select_source
+                            ];
+                        }
+
+                        // إضافة المعرف العربي إذا كان متوفراً
+                        if ($moduleField->arabic_name) {
+                            $columnData['label'] = $moduleField->arabic_name;
+                        }
+                    }
+
+                    $this->availableColumns[] = $columnData;
+
+                    // طباعة معلومات التصحيح
+                    if ($columnData['has_relation']) {
+                        Log::info('Column with relation: ' . json_encode($columnData));
+                    }
 
                     if (in_array($columnType, ['integer', 'bigint', 'decimal', 'float', 'double'])) {
                         $this->numericColumns[] = $column;
@@ -829,6 +868,37 @@ class DashboardBuilderMain extends Component
         if ($this->widgetType !== 'chart') {
             $this->resetChartSettings();
         }
+    }
+
+    /**
+     * الحصول على القيمة المرتبطة للحقل
+     */
+    private function getRelatedValue($column, $value)
+    {
+        if (!isset($column['relation'])) {
+            return $value;
+        }
+
+        try {
+            if ($column['relation']['type'] === 'select') {
+                // معالجة القوائم المنسدلة
+                $options = json_decode($column['relation']['source'], true);
+                return $options[$value] ?? $value;
+            } else {
+                // معالجة العلاقات مع الجداول
+                $relatedRecord = DB::table($column['relation']['table'])
+                    ->where('id', $value)
+                    ->first();
+
+                if ($relatedRecord) {
+                    return $relatedRecord->{$column['relation']['display']} ?? $value;
+                }
+            }
+        } catch (\Exception $e) {
+            Log::error('Error getting related value: ' . $e->getMessage());
+        }
+
+        return $value;
     }
 
     public function render()
