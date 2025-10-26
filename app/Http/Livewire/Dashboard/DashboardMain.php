@@ -559,13 +559,50 @@ class DashboardMain extends Component
     private function getTableData($widget)
     {
         $module = $widget['module'];
-        $limit = $widget['limit'] ?? 10; // تحديث من table_limit إلى limit
-        $columns = $widget['columns'] ?? ['*']; // تحديث من table_columns إلى columns
+        $limit = $widget['limit'] ?? 10;
+        $columns = $widget['columns'] ?? ['*'];
         $orderBy = $widget['order_by'] ?? 'id';
         $orderDirection = $widget['order_direction'] ?? 'desc';
 
         // تحويل اسم الوحدة إلى اسم الجدول الصحيح
         $tableName = $this->getTableNameFromModule($module);
+
+        // جلب معلومات العلاقات من ModuleField
+        $moduleFields = \App\Models\System\ModuleField::where('table_name', $tableName)
+            ->whereNotNull('related_table')
+            ->get()
+            ->keyBy('field_name');
+
+        // تحضير معلومات الأعمدة مع العلاقات
+        $widget['availableColumns'] = [];
+        foreach ($columns as $column) {
+            $moduleField = $moduleFields->get($column);
+            $columnInfo = [
+                'name' => $column,
+                'label' => $moduleField ? $moduleField->field_arabic_name : $column,
+                'has_relation' => false
+            ];
+
+            if ($moduleField) {
+                if ($moduleField->related_table) {
+                    $columnInfo['has_relation'] = true;
+                    $columnInfo['relation'] = [
+                        'type' => 'table',
+                        'table' => $moduleField->related_table,
+                        'field' => $moduleField->related_field ?: 'id',
+                        'display' => $moduleField->related_display ?: 'name'
+                    ];
+                } elseif ($moduleField->select_source) {
+                    $columnInfo['has_relation'] = true;
+                    $columnInfo['relation'] = [
+                        'type' => 'select',
+                        'source' => $moduleField->select_source
+                    ];
+                }
+            }
+
+            $widget['availableColumns'][] = $columnInfo;
+        }
 
         if (!Schema::hasTable($tableName)) {
             return [];
@@ -728,7 +765,36 @@ class DashboardMain extends Component
             }
         }
 
-        return $query->limit($limit)->get()->toArray();
+        // جلب البيانات الأساسية
+        $results = $query->limit($limit)->get();
+
+        // معالجة البيانات المرتبطة
+        foreach ($results as $key => $row) {
+            foreach ($moduleFields as $fieldName => $moduleField) {
+                if (isset($row->$fieldName) && $moduleField->related_table) {
+                    // جلب البيانات المرتبطة
+                    $relatedValue = DB::table($moduleField->related_table)
+                        ->where('id', $row->$fieldName)
+                        ->value($moduleField->related_display ?: 'name');
+
+                    if ($relatedValue !== null) {
+                        $row->$fieldName = $relatedValue;
+                    }
+                } elseif (isset($row->$fieldName) && $moduleField->select_source) {
+                    // معالجة القوائم المنسدلة
+                    try {
+                        $options = json_decode($moduleField->select_source, true);
+                        if (isset($options[$row->$fieldName])) {
+                            $row->$fieldName = $options[$row->$fieldName];
+                        }
+                    } catch (\Exception $e) {
+                        // في حالة وجود خطأ في تحليل JSON، نحتفظ بالقيمة الأصلية
+                    }
+                }
+            }
+        }
+
+        return json_decode(json_encode($results), true);
     }
 
     private function getChartData($widget)

@@ -354,7 +354,31 @@
                                                 <tr>
                                                     @if(isset($widget['columns']) && is_array($widget['columns']))
                                                         @foreach($widget['columns'] as $column)
-                                                            <td>{{ data_get($row, $column, '') }}</td>
+                                                            @php
+                                                                $columnInfo = collect($widget['availableColumns'] ?? [])->firstWhere('name', $column);
+                                                                $value = data_get($row, $column, '');
+
+                                                                if ($columnInfo && $columnInfo['has_relation'] ?? false) {
+                                                                    if ($columnInfo['relation']['type'] === 'select') {
+                                                                        // للقوائم المنسدلة
+                                                                        $options = json_decode($columnInfo['relation']['source'], true);
+                                                                        $value = $options[$value] ?? $value;
+                                                                    } else {
+                                                                        // للعلاقات مع الجداول
+                                                                        try {
+                                                                            $relatedValue = DB::table($columnInfo['relation']['table'])
+                                                                                ->where('id', $value)
+                                                                                ->value($columnInfo['relation']['display']);
+                                                                            if ($relatedValue !== null) {
+                                                                                $value = $relatedValue;
+                                                                            }
+                                                                        } catch (\Exception $e) {
+                                                                            // في حالة حدوث خطأ، نحتفظ بالقيمة الأصلية
+                                                                        }
+                                                                    }
+                                                                }
+                                                            @endphp
+                                                            <td>{{ $value }}</td>
                                                         @endforeach
                                                     @else
                                                         @foreach((array)$row as $value)

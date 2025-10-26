@@ -83,15 +83,6 @@ Route::middleware(['auth', config('jetstream.auth_session'), 'verified'])->group
         return view('content.dashboard-builder.index');
     })->name('dashboard-builder.index')->middleware(['auth', 'can:dashboard-builder-access']);
 
-
-
-
-
-
-
-
-
-
     Route::GET('EducationalLevels', [EducationalLevelController::class, 'index'])->name('EducationalLevels');
     Route::GET('EducationalLevels/export-pdf-tcpdf', [EducationalLevelTcpdfExportController::class, 'exportPdf'])->name('EducationalLevels.export.pdf.tcpdf');
     Route::GET('EducationalLevels/print-view', [EducationalLevelPrintController::class, 'printView'])->name('EducationalLevels.print.view');
