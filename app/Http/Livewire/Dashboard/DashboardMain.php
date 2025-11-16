@@ -769,6 +769,7 @@ class DashboardMain extends Component
         $results = $query->limit($limit)->get();
 
         // معالجة البيانات المرتبطة
+        /** @var \stdClass $row */
         foreach ($results as $key => $row) {
             foreach ($moduleFields as $fieldName => $moduleField) {
                 if (isset($row->$fieldName) && $moduleField->related_table) {

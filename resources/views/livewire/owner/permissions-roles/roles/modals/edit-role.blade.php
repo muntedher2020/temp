@@ -68,29 +68,35 @@
                     </div>
 
                     <div class="col-12">
-                        <div class="row">
-                            @foreach ($this->filteredPermissions as $Permission)
-                                <div class="mb-3 col-3">
-                                    <label class="switch switch-square">
-                                        <input wire:model.defer='SetPermission.{{ $Permission->id }}'
-                                            wire:change='TickPermission' type="checkbox" value="{{ $Permission->name }}"
-                                            class="switch-input" />
-                                        <span class="switch-toggle-slider">
-                                            <span class="switch-on"></span>
-                                            <span class="switch-off"></span>
-                                        </span>
-                                        <div class="d-flex flex-column">
-                                            <span
-                                                class="switch-label text-dark fw-bolder">{{ $Permission->name }}</span>
-                                            <span class="switch-label text-muted">{{ $Permission->explain_name }}</span>
-                                        </div>
-                                    </label>
-                                </div>
-                            @endforeach
-                            @error('SetPermission')
-                                <small class='text-danger inputerror'> {{ $message }} </small>
-                            @enderror
-                        </div>
+                        @foreach ($this->groupedPermissions as $groupName => $permissions)
+                            <hr class="my-4">
+                            <h5 class="fw-bolder mb-3 text-primary d-flex align-items-center">
+                                <i class="mdi mdi-folder-outline me-2"></i>
+                                {{ $groupName }} </h5>
+                            <div class="row">
+                                @foreach ($permissions as $Permission)
+                                    <div class="mb-3 col-lg-3 col-md-4 col-sm-6">
+                                        <label class="switch switch-square">
+                                            <input wire:model.defer='SetPermission.{{ $Permission->id }}'
+                                                wire:change='TickPermission' type="checkbox" value="{{ $Permission->name }}"
+                                                class="switch-input" />
+                                            <span class="switch-toggle-slider">
+                                                <span class="switch-on"></span>
+                                                <span class="switch-off"></span>
+                                            </span>
+                                            <div class="d-flex flex-column">
+                                                <span
+                                                    class="switch-label text-dark fw-bolder">{{ $Permission->name }}</span>
+                                                <span class="switch-label text-muted">{{ $Permission->explain_name }}</span>
+                                            </div>
+                                        </label>
+                                    </div>
+                                @endforeach
+                            </div>
+                        @endforeach
+                        @error('SetPermission')
+                            <small class='text-danger inputerror'> {{ $message }} </small>
+                        @enderror
                     </div>
                     <div class="text-center col-12">
                         <hr>

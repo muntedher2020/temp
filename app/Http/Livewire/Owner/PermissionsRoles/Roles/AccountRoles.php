@@ -100,6 +100,7 @@ class AccountRoles extends Component
         if($this->TickAll == false)
         {
             $this->TickAll = true;
+            /** @var \Spatie\Permission\Models\Permission $Permission */
             foreach ($Permissions as $Permission)
             {
                 $this->SetPermission[$Permission->id] = $Permission->name;
@@ -111,6 +112,34 @@ class AccountRoles extends Component
                 $this->SetPermission = [];
             }
         }
+    }
+
+    public function getGroupedPermissionsProperty()
+    {
+        $permissions = $this->filteredPermissions;
+        $groupedPermissions = [];
+
+        foreach ($permissions as $permission) {
+            // 1. تقسيم اسم الصلاحية عند أول علامة '-' أو استخدام الاسم كاملاً
+            $parts = explode('-', $permission->name, 2);
+            $groupName = $parts[0];
+
+            // 2. معالجة حالة الأحرف: تحويل اسم المجموعة إلى أحرف صغيرة لتوحيد
+            $groupName = strtolower($groupName);
+
+            // 3. معالجة الجمع: إزالة حرف 's' من نهاية اسم المجموعة إذا كان موجودًا
+            if (substr($groupName, -1) === 's') {
+                $groupName = substr($groupName, 0, -1);
+            }
+
+            // 4. إضافة الصلاحية إلى المجموعة الموحدة
+            if (!isset($groupedPermissions[$groupName])) {
+                $groupedPermissions[$groupName] = [];
+            }
+            $groupedPermissions[$groupName][] = $permission;
+        }
+
+        return $groupedPermissions;
     }
 
     public function store()
@@ -165,6 +194,7 @@ class AccountRoles extends Component
         }
 
         $Permissions = Permission::with('roles')->get();
+        /** @var \Spatie\Permission\Models\Permission $Permission */
         foreach ($Permissions as $Permission)
         {
             if(in_array($this->name, $Permission->roles->pluck('name')->toArray()))
